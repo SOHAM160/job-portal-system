@@ -1,155 +1,94 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import {
-  Briefcase,
-  LogOut,
-  LayoutDashboard,
-  Menu,
-  X,
-} from "lucide-react";
-import { useState } from "react";
+import { Briefcase, LogOut, LayoutDashboard, Search, Home as HomeIcon, Bell, MessageSquare, UserCircle } from "lucide-react";
+import toast from "react-hot-toast";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/login");
+    try {
+      await logout();
+      toast.success("Logged out successfully");
+      navigate("/");
+    } catch (error) {
+      toast.error("Logout failed");
+    }
   };
 
-  const dashboardPath = user ? `/${user.role}/dashboard` : "/";
-
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass-strong">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
+    <nav className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm animate-fade-in">
+      <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+        {/* Left: Logo & Search */}
+        <div className="flex items-center gap-4 flex-1">
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <Briefcase className="w-5 h-5 text-white" />
+            <div className="bg-primary-600 p-1.5 rounded flex items-center justify-center group-hover:bg-primary-700 transition-all">
+                <Briefcase className="w-5 h-5 text-white" />
             </div>
-            <span className="text-lg font-bold tracking-tight">
-              Job<span className="gradient-text">Portal</span>
-            </span>
+            <span className="text-xl font-black text-slate-800 tracking-tight hidden sm:block">Hire <span className="text-primary-600">&</span> Fly</span>
           </Link>
+          
+          {user && (
+            <div className="hidden md:flex items-center bg-primary-50 border border-slate-200 rounded-lg px-3 py-1.5 w-72 group focus-within:w-96 transition-all duration-300">
+              <Search className="w-4 h-4 text-slate-500 mr-2" />
+              <input 
+                type="text" 
+                placeholder="Search for jobs, companies..." 
+                className="bg-transparent border-none outline-none text-sm w-full placeholder:text-slate-500"
+              />
+            </div>
+          )}
+        </div>
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-3">
-            {user ? (
-              <>
-                <Link
-                  to={dashboardPath}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-surface-200 hover:bg-white/5 transition-colors"
-                >
-                  <LayoutDashboard className="w-4 h-4" />
-                  Dashboard
-                </Link>
-                <div className="flex items-center gap-3 ml-2 pl-4 border-l border-white/10">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-accent-400 flex items-center justify-center text-xs font-bold uppercase">
-                      {user.name?.charAt(0)}
-                    </div>
-                    <div className="text-sm">
-                      <p className="font-medium text-white leading-tight">{user.name}</p>
-                      <p className="text-[11px] text-surface-200/60 capitalize">{user.role}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="p-2 rounded-lg text-surface-200/60 hover:text-red-400 hover:bg-red-400/10 transition-all duration-200"
-                    title="Logout"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </button>
+        {/* Right: Nav Links */}
+        <div className="flex items-center gap-1 sm:gap-6">
+          <NavLink 
+            to={user ? `/${user.role}/dashboard` : "/"} 
+            icon={<HomeIcon className="w-6 h-6" />} 
+            label="Home" 
+          />
+          
+          {user ? (
+            <>
+              <NavLink to="/notifications" icon={<Bell className="w-6 h-6" />} label="Notifications" />
+              <div className="h-8 w-px bg-slate-200 mx-2 hidden sm:block" />
+              <button
+                onClick={handleLogout}
+                className="flex flex-col items-center justify-center text-slate-500 hover:text-red-600 transition-colors group px-2"
+              >
+                <LogOut className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                <span className="text-[10px] font-medium mt-1 uppercase tracking-wider">Logout</span>
+              </button>
+              <div className="flex items-center gap-3 ml-4 border-l border-slate-200 pl-4 hidden sm:flex">
+                <div className="text-right">
+                  <p className="text-xs font-bold text-slate-900 leading-none">{user.name}</p>
+                  <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-tight">{user.role}</p>
                 </div>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-surface-200 hover:bg-white/5 transition-colors"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/register"
-                  className="px-5 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white transition-all duration-300 shadow-lg shadow-primary-600/20"
-                >
-                  Get Started
-                </Link>
-              </>
-            )}
-          </div>
-
-          {/* Mobile toggle */}
-          <button
-            className="md:hidden p-2 rounded-lg text-surface-200 hover:bg-white/5"
-            onClick={() => setMobileOpen(!mobileOpen)}
-          >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+                {user.profilePicture ? (
+                  <img src={user.profilePicture} className="w-8 h-8 rounded-full border border-slate-200 shadow-sm" alt="Profile" />
+                ) : (
+                  <UserCircle className="w-8 h-8 text-slate-400" />
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link to="/login" className="text-primary-600 hover:text-primary-700 px-4 py-1.5 rounded-full font-bold text-sm transition-all hover:bg-primary-50">Sign In</Link>
+              <Link to="/register" className="btn-primary !px-5 !py-1.5 !text-sm whitespace-nowrap">Join Now</Link>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Mobile Menu */}
-      {mobileOpen && (
-        <div className="md:hidden border-t border-white/5 animate-fade-in-up">
-          <div className="px-4 py-4 space-y-2">
-            {user ? (
-              <>
-                <div className="flex items-center gap-3 px-3 py-2 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-accent-400 flex items-center justify-center text-sm font-bold uppercase">
-                    {user.name?.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">{user.name}</p>
-                    <p className="text-xs text-surface-200/60 capitalize">{user.role}</p>
-                  </div>
-                </div>
-                <Link
-                  to={dashboardPath}
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-surface-200 hover:bg-white/5 transition-colors"
-                >
-                  <LayoutDashboard className="w-4 h-4" />
-                  Dashboard
-                </Link>
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setMobileOpen(false);
-                  }}
-                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-red-400 hover:bg-red-400/10 transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="block w-full px-3 py-2 rounded-lg text-sm text-surface-200 hover:bg-white/5 transition-colors text-center"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setMobileOpen(false)}
-                  className="block w-full px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-primary-600 to-primary-500 text-white text-center"
-                >
-                  Get Started
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </nav>
   );
 };
+
+const NavLink = ({ to, icon, label }) => (
+  <Link to={to} className="flex flex-col items-center justify-center text-slate-500 hover:text-primary-600 transition-colors group px-2 relative after:absolute after:bottom-[-13px] after:left-0 after:right-0 after:h-0.5 after:bg-primary-600 after:scale-x-0 hover:after:scale-x-100 after:transition-transform">
+    <div className="group-hover:scale-110 transition-transform">{icon}</div>
+    <span className="text-[10px] font-medium mt-1 uppercase tracking-wider hidden sm:block">{label}</span>
+  </Link>
+);
 
 export default Navbar;

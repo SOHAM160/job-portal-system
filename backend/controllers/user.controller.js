@@ -1,23 +1,21 @@
 const User = require("../models/User.model");
 
-// ── Get all users (Admin only) ─────────────────────────────
+// @desc    Get all users (Admin)
 exports.getAllUsers = async (req, res, next) => {
   try {
-    const users = await User.find().sort({ createdAt: -1 });
+    const users = await User.find().select("-password");
     res.status(200).json({ success: true, count: users.length, users });
   } catch (error) {
     next(error);
   }
 };
 
-// ── Get user by ID ─────────────────────────────────────────
+// @desc    Get single user
 exports.getUserById = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).select("-password");
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
     res.status(200).json({ success: true, user });
   } catch (error) {
@@ -25,40 +23,45 @@ exports.getUserById = async (req, res, next) => {
   }
 };
 
-// ── Update user profile ────────────────────────────────────
+// @desc    Update user profile
 exports.updateProfile = async (req, res, next) => {
   try {
-    const allowedFields = ["name", "profilePicture"];
-    const updates = {};
-    allowedFields.forEach((field) => {
-      if (req.body[field] !== undefined) updates[field] = req.body[field];
-    });
-
-    const user = await User.findByIdAndUpdate(req.user._id, updates, {
+    const user = await User.findByIdAndUpdate(req.user._id, req.body, {
       new: true,
       runValidators: true,
-    });
-
+    }).select("-password");
     res.status(200).json({ success: true, user });
   } catch (error) {
     next(error);
   }
 };
 
-// ── Delete user (Admin only) ───────────────────────────────
+// @desc    Delete user
 exports.deleteUser = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+    await User.findByIdAndDelete(req.params.id);
+    res.status(200).json({ success: true, message: "User deleted" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Toggle Save Job
+exports.toggleSaveJob = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    const jobId = req.params.jobId;
+
+    const isSaved = user.savedJobs.includes(jobId);
+
+    if (isSaved) {
+      user.savedJobs = user.savedJobs.filter((id) => id.toString() !== jobId);
+    } else {
+      user.savedJobs.push(jobId);
     }
 
-    await User.findByIdAndDelete(req.params.id);
-    res
-      .status(200)
-      .json({ success: true, message: "User deleted successfully" });
+    await user.save();
+    res.status(200).json({ success: true, savedJobs: user.savedJobs });
   } catch (error) {
     next(error);
   }

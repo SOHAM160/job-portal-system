@@ -7,12 +7,15 @@ require("dotenv").config();
 
 const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
+const jobRoutes = require("./routes/job.routes");
+const companyRoutes = require("./routes/company.routes");
+const applicationRoutes = require("./routes/application.routes");
 
 const app = express();
 
 // ── Middleware ──────────────────────────────────────────────
 app.use(morgan("dev"));
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(
   cors({
@@ -24,6 +27,9 @@ app.use(
 // ── Routes ─────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/companies", companyRoutes);
+app.use("/api/jobs", jobRoutes);
+app.use("/api/applications", applicationRoutes);
 
 app.get("/", (_req, res) => {
   res.json({ message: "Job Portal API is running 🚀" });

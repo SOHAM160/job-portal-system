@@ -13,11 +13,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Check token on mount
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
   const checkAuth = async () => {
     try {
       const { data } = await getMe();
@@ -29,20 +24,39 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Check token on mount
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
   const register = async (formData) => {
     const { data } = await registerUser(formData);
     if (data.success) setUser(data.user);
     return data;
   };
 
+  const refreshUser = async () => {
+    try {
+      const { data } = await getMe();
+      if (data.success) {
+        setUser(data.user);
+      }
+    } catch (err) {
+      console.error("Token invalid, logging out");
+      setUser(null);
+    }
+  };
+
   const login = async (formData) => {
     const { data } = await loginUser(formData);
-    if (data.success) setUser(data.user);
+    if (data.success) {
+      setUser(data.user);
+    }
     return data;
   };
 
-  const loginWithGoogle = async (tokenId) => {
-    const { data } = await googleLoginUser(tokenId);
+  const loginWithGoogle = async (tokenId, role) => {
+    const { data } = await googleLoginUser(tokenId, role);
     if (data.success) setUser(data.user);
     return data;
   };
@@ -53,7 +67,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, register, login, loginWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, loading, register, login, loginWithGoogle, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -4,12 +4,16 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Home from "./pages/Home";
+import RoleSelection from "./pages/RoleSelection";
+import CandidateLanding from "./pages/CandidateLanding";
+import RecruiterLanding from "./pages/RecruiterLanding";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import CandidateDashboard from "./pages/dashboards/CandidateDashboard";
 import RecruiterDashboard from "./pages/dashboards/RecruiterDashboard";
+import CompanyManagement from "./pages/dashboards/CompanyManagement";
 import AdminDashboard from "./pages/dashboards/AdminDashboard";
+import Notifications from "./pages/Notifications";
 
 function App() {
   return (
@@ -34,7 +38,9 @@ function App() {
           />
           <Routes>
             {/* Public Routes */}
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<RoleSelection />} />
+            <Route path="/candidate" element={<CandidateLanding />} />
+            <Route path="/recruiter" element={<RecruiterLanding />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
@@ -56,10 +62,27 @@ function App() {
               }
             />
             <Route
+              path="/recruiter/companies"
+              element={
+                <ProtectedRoute allowedRoles={["recruiter"]}>
+                  <CompanyManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/admin/dashboard"
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute allowedRoles={["candidate", "recruiter", "admin"]}>
+                  <Notifications />
                 </ProtectedRoute>
               }
             />

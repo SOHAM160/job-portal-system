@@ -4,6 +4,7 @@ const {
   getUserById,
   updateProfile,
   deleteUser,
+  toggleSaveJob,
 } = require("../controllers/user.controller");
 const { authenticate, authorize } = require("../middleware/auth.middleware");
 
@@ -15,6 +16,7 @@ router.use(authenticate);
 router.get("/", authorize("admin"), getAllUsers);
 router.get("/:id", getUserById);
 router.put("/profile", updateProfile);
+router.post("/save-job/:jobId", toggleSaveJob);
 router.delete("/:id", authorize("admin"), deleteUser);
 
 module.exports = router;

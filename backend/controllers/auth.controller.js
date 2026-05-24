@@ -110,7 +110,7 @@ exports.getMe = async (req, res, next) => {
 // ── Google Login ──────────────────────────────────────────
 exports.googleLogin = async (req, res, next) => {
   try {
-    const { tokenId } = req.body;
+    const { tokenId, role } = req.body;
     if (!tokenId) {
       return res.status(400).json({ success: false, message: "Token ID is required" });
     }
@@ -140,7 +140,7 @@ exports.googleLogin = async (req, res, next) => {
         email,
         googleId,
         profilePicture: picture,
-        role: "candidate", // Default role
+        role: role || "candidate", // Use provided role or default
       });
     }
 
