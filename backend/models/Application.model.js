@@ -18,8 +18,23 @@ const applicationSchema = new mongoose.Schema(
       default: "Pending",
     },
     resume: {
-      type: String,
-      // In a real app, this would be a URL to Cloudinary or S3
+      type: String, // Cloudinary URL
+    },
+    resumePublicId: {
+      type: String, // Cloudinary public_id for cleanup
+    },
+    atsScore: {
+      type: Number, // 0-100
+      default: null,
+    },
+    interview: {
+      date: { type: Date },
+      meetingLink: { type: String },
+      status: {
+        type: String,
+        enum: ["Scheduled", "Completed", "Cancelled"],
+        default: "Scheduled",
+      },
     },
   },
   { timestamps: true }

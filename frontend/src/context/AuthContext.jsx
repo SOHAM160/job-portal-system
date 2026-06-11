@@ -15,7 +15,13 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      const { data } = await getMe();
+      // Try to determine role from URL to support simultaneous logins
+      let role = null;
+      if (window.location.pathname.startsWith("/candidate")) role = "candidate";
+      if (window.location.pathname.startsWith("/recruiter")) role = "recruiter";
+      if (window.location.pathname.startsWith("/admin")) role = "admin";
+
+      const { data } = await getMe(role);
       if (data.success) setUser(data.user);
     } catch {
       setUser(null);
@@ -37,7 +43,7 @@ export const AuthProvider = ({ children }) => {
 
   const refreshUser = async () => {
     try {
-      const { data } = await getMe();
+      const { data } = await getMe(user?.role);
       if (data.success) {
         setUser(data.user);
       }
@@ -62,7 +68,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    await logoutUser();
+    const role = user?.role;
+    await logoutUser(role);
     setUser(null);
   };
 

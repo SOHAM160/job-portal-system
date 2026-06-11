@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { Plus, Users, Briefcase, Trash2, Edit3, Loader2, X, Bell, Building, Eye, CheckCircle2, XCircle, Clock, ChevronDown, ChevronUp, UserCircle, FileText, Mail } from "lucide-react";
+import { Plus, Users, Briefcase, Trash2, Edit3, Loader2, X, Bell, Building, Eye, CheckCircle2, XCircle, Clock, ChevronDown, ChevronUp, UserCircle, FileText, Mail, Calendar, Video, Send, MessageSquare } from "lucide-react";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
-import { getRecruiterJobs, createJob, deleteJob, getCompanies, updateJob, registerCompany, getJobApplications, updateApplicationStatus } from "../../api";
+import { getRecruiterJobs, createJob, deleteJob, getCompanies, updateJob, registerCompany, getJobApplications, updateApplicationStatus, scheduleInterview } from "../../api";
 
 const RecruiterDashboard = () => {
   const [jobs, setJobs] = useState([]);
@@ -19,6 +19,13 @@ const RecruiterDashboard = () => {
   const [viewingJobId, setViewingJobId] = useState(null);
   const [applicants, setApplicants] = useState([]);
   const [applicantsLoading, setApplicantsLoading] = useState(false);
+
+  // Interview scheduling state
+  const [showInterviewModal, setShowInterviewModal] = useState(false);
+  const [interviewTarget, setInterviewTarget] = useState(null); // the application object
+  const [interviewDate, setInterviewDate] = useState("");
+  const [interviewLink, setInterviewLink] = useState("");
+  const [interviewLoading, setInterviewLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -148,7 +155,6 @@ const RecruiterDashboard = () => {
     try {
       await updateApplicationStatus(applicationId, newStatus);
       toast.success(`Application ${newStatus.toLowerCase()}`);
-      // Refresh applicants for the current job
       if (viewingJobId) {
         const { data } = await getJobApplications(viewingJobId);
         setApplicants(data.applications);
@@ -158,36 +164,42 @@ const RecruiterDashboard = () => {
     }
   };
 
-  const handleViewResume = (e, resumeData) => {
+  // ── Interview Scheduling ─────────────────────────────────
+  const openInterviewModal = (app) => {
+    setInterviewTarget(app);
+    setInterviewDate("");
+    setInterviewLink("");
+    setShowInterviewModal(true);
+  };
+
+  const handleScheduleInterview = async (e) => {
     e.preventDefault();
-    e.stopPropagation();
-    
-    if (!resumeData) return;
-    
-    // Check if it's our new Base64 PDF
-    if (resumeData.startsWith("data:application/pdf")) {
-      try {
-        const base64str = resumeData.split(',')[1];
-        const binaryData = atob(base64str);
-        const array = new Uint8Array(binaryData.length);
-        for (let i = 0; i < binaryData.length; i++) {
-          array[i] = binaryData.charCodeAt(i);
-        }
-        const blob = new Blob([array], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
-      } catch (err) {
-        toast.error("Error generating PDF preview");
+    if (!interviewDate || !interviewLink) return toast.error("Date and meeting link are required");
+
+    setInterviewLoading(true);
+    try {
+      await scheduleInterview(interviewTarget._id, {
+        date: interviewDate,
+        meetingLink: interviewLink,
+      });
+      toast.success("Interview scheduled & email sent to candidate!");
+      setShowInterviewModal(false);
+      // Refresh applicants
+      if (viewingJobId) {
+        const { data } = await getJobApplications(viewingJobId);
+        setApplicants(data.applications);
       }
-    } 
-    // Check if it's a valid external URL (like Google Drive)
-    else if (resumeData.startsWith("http://") || resumeData.startsWith("https://")) {
-      window.open(resumeData, '_blank');
-    } 
-    // It's the old corrupted/mock text!
-    else {
-      toast.error("This resume is an older mock file and cannot be opened.");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to schedule interview");
+    } finally {
+      setInterviewLoading(false);
     }
+  };
+
+  const handleViewResume = (applicationId) => {
+    if (!applicationId) return toast.error("Document not found");
+    const url = `/api/applications/${applicationId}/resume`;
+    window.open(url, '_blank');
   };
 
   if (loading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin text-primary-600 w-8 h-8" /></div>;
@@ -262,41 +274,76 @@ const RecruiterDashboard = () => {
                   ) : (
                     <div className="space-y-3">
                       {applicants.map((app) => (
-                        <div key={app._id} className="bg-white rounded-xl p-5 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                          <div className="flex items-center gap-4">
-                            {app.candidate?.profilePicture ? (
-                              <img src={app.candidate.profilePicture} alt={app.candidate.name} className="w-12 h-12 rounded-full border-2 border-slate-200 object-cover" />
-                            ) : (
-                              <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-black text-lg border-2 border-primary-200">
-                                {app.candidate?.name?.[0]?.toUpperCase() || '?'}
-                              </div>
-                            )}
-                            <div>
-                              <p className="font-bold text-slate-900">{app.candidate?.name || 'Unknown'}</p>
-                              <p className="text-xs text-slate-500 flex items-center gap-1"><Mail className="w-3 h-3" /> {app.candidate?.email || 'N/A'}</p>
-                              <div className="flex gap-2 mt-1.5 items-center">
-                                {app.resume && (
-                                  <button type="button" onClick={(e) => handleViewResume(e, app.resume)} className="text-[10px] bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors px-2 py-0.5 rounded font-bold flex items-center gap-1 uppercase">
-                                    <FileText className="w-3 h-3" /> View Resume
-                                  </button>
-                                )}
-                                <span className="text-[10px] text-slate-400">Applied {new Date(app.createdAt).toLocaleDateString()}</span>
+                        <div key={app._id} className="bg-white rounded-xl p-5 border border-slate-200">
+                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div className="flex items-center gap-4">
+                              {app.candidate?.profilePicture ? (
+                                <img src={app.candidate.profilePicture} alt={app.candidate.name} className="w-12 h-12 rounded-full border-2 border-slate-200 object-cover" />
+                              ) : (
+                                <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-black text-lg border-2 border-primary-200">
+                                  {app.candidate?.name?.[0]?.toUpperCase() || '?'}
+                                </div>
+                              )}
+                              <div>
+                                <p className="font-bold text-slate-900">{app.candidate?.name || 'Unknown'}</p>
+                                <p className="text-xs text-slate-500 flex items-center gap-1"><Mail className="w-3 h-3" /> {app.candidate?.email || 'N/A'}</p>
+                                <div className="flex gap-2 mt-1.5 items-center flex-wrap">
+                                  {app.resume && (
+                                    <button type="button" onClick={() => handleViewResume(app._id)} className="text-[10px] bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors px-2 py-0.5 rounded font-bold flex items-center gap-1 uppercase">
+                                      <FileText className="w-3 h-3" /> View Resume
+                                    </button>
+                                  )}
+                                  {app.candidate?._id && (
+                                    <button type="button" onClick={async () => {
+                                      try {
+                                        const { sendMessageApi } = await import("../../api/chat");
+                                        await sendMessageApi(app.candidate._id, `Hi ${app.candidate.name.split(' ')[0]}, thanks for applying to ${job.title}!`);
+                                        toast.success("Message started!");
+                                        window.dispatchEvent(new CustomEvent("open-chat"));
+                                      } catch(err) {
+                                        toast.error("Failed to start chat.");
+                                      }
+                                    }} className="text-[10px] bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors px-2 py-0.5 rounded font-bold flex items-center gap-1 uppercase">
+                                      <MessageSquare className="w-3 h-3" /> Message
+                                    </button>
+                                  )}
+                                  <span className="text-[10px] text-slate-400">Applied {new Date(app.createdAt).toLocaleDateString()}</span>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <StatusBadge status={app.status} />
-                            {app.status === 'Pending' && (
-                              <>
-                                <button onClick={() => handleStatusChange(app._id, 'Accepted')} className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors" title="Accept">
-                                  <CheckCircle2 className="w-5 h-5" />
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <StatusBadge status={app.status} />
+                              {app.status === 'Pending' && (
+                                <>
+                                  <button onClick={() => handleStatusChange(app._id, 'Accepted')} className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors" title="Accept">
+                                    <CheckCircle2 className="w-5 h-5" />
+                                  </button>
+                                  <button onClick={() => handleStatusChange(app._id, 'Rejected')} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors" title="Reject">
+                                    <XCircle className="w-5 h-5" />
+                                  </button>
+                                </>
+                              )}
+                              {app.status === 'Accepted' && (
+                                <button onClick={() => openInterviewModal(app)} className="flex items-center gap-1.5 text-xs font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-2 rounded-lg border border-indigo-200 transition-colors" title="Schedule Interview">
+                                  <Calendar className="w-4 h-4" /> {app.interview?.date ? "Reschedule" : "Schedule"}
                                 </button>
-                                <button onClick={() => handleStatusChange(app._id, 'Rejected')} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors" title="Reject">
-                                  <XCircle className="w-5 h-5" />
-                                </button>
-                              </>
-                            )}
+                              )}
+                            </div>
                           </div>
+
+                          {/* Interview Info (if scheduled) */}
+                          {app.interview?.date && (
+                            <div className="mt-3 bg-indigo-50 border border-indigo-200 rounded-lg p-3 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                              <Calendar className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+                              <div className="flex-1 text-xs">
+                                <span className="font-bold text-indigo-800">Interview: </span>
+                                <span className="text-indigo-700">{new Date(app.interview.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} at {new Date(app.interview.date).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</span>
+                              </div>
+                              <a href={app.interview.meetingLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs font-bold text-indigo-600 bg-white px-3 py-1.5 rounded-lg border border-indigo-200 hover:bg-indigo-50 transition-colors">
+                                <Video className="w-3 h-3" /> Meeting Link
+                              </a>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -347,13 +394,7 @@ const RecruiterDashboard = () => {
                           </>
                         ) : (
                           <div className="space-y-2">
-                            <input 
-                              value={newCompanyName} 
-                              onChange={(e) => setNewCompanyName(e.target.value)} 
-                              className="input-field" 
-                              placeholder="e.g. Acme Corp" 
-                              autoFocus
-                            />
+                            <input value={newCompanyName} onChange={(e) => setNewCompanyName(e.target.value)} className="input-field" placeholder="e.g. Acme Corp" autoFocus />
                             <div className="flex gap-2">
                               <button type="button" onClick={handleCreateCompany} disabled={newCompanyLoading} className="btn-primary !py-1.5 !px-4 !text-xs !rounded-lg">
                                 {newCompanyLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Create"}
@@ -396,6 +437,42 @@ const RecruiterDashboard = () => {
                 <button disabled={formLoading} type="submit" className="btn-primary w-full !py-4 shadow-xl">
                     {formLoading ? <Loader2 className="animate-spin"/> : (editingJob ? "Update Listing" : "Publish Opportunity")}
                 </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Interview Scheduling Modal ──────────────────────── */}
+      {showInterviewModal && interviewTarget && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setShowInterviewModal(false)} />
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl relative animate-fade-in overflow-hidden">
+            <div className="p-6 border-b bg-indigo-50 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-black text-indigo-900 flex items-center gap-2"><Calendar className="w-5 h-5" /> Schedule Interview</h3>
+                <p className="text-xs text-indigo-600 font-bold mt-1">For: {interviewTarget.candidate?.name || "Candidate"}</p>
+              </div>
+              <button onClick={() => setShowInterviewModal(false)} className="bg-white p-2 rounded-full border border-indigo-200"><X className="w-4 h-4 text-indigo-400" /></button>
+            </div>
+            <form onSubmit={handleScheduleInterview} className="p-6 space-y-5">
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase text-slate-500">Interview Date & Time</label>
+                <input required type="datetime-local" value={interviewDate} onChange={(e) => setInterviewDate(e.target.value)} className="input-field" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase text-slate-500">Meeting Link</label>
+                <div className="relative">
+                  <Video className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
+                  <input required type="url" value={interviewLink} onChange={(e) => setInterviewLink(e.target.value)} className="input-field pl-10" placeholder="https://meet.google.com/..." />
+                </div>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-xs text-blue-700">
+                <p className="font-bold mb-1">📧 Email Notification</p>
+                <p>An email with the interview date, time, and meeting link will be automatically sent to <strong>{interviewTarget.candidate?.email}</strong>.</p>
+              </div>
+              <button disabled={interviewLoading} type="submit" className="btn-primary w-full !py-3 flex items-center justify-center gap-2">
+                {interviewLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Send className="w-4 h-4" /> Schedule & Notify Candidate</>}
+              </button>
             </form>
           </div>
         </div>

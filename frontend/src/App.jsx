@@ -14,6 +14,7 @@ import RecruiterDashboard from "./pages/dashboards/RecruiterDashboard";
 import CompanyManagement from "./pages/dashboards/CompanyManagement";
 import AdminDashboard from "./pages/dashboards/AdminDashboard";
 import Notifications from "./pages/Notifications";
+import ChatWidget from "./components/ChatWidget";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
       <Router>
         <AuthProvider>
           <Navbar />
+          <ChatWidget />
           <Toaster
             position="top-right"
             toastOptions={{

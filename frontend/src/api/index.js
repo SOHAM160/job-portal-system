@@ -10,8 +10,8 @@ const API = axios.create({
 export const registerUser = (data) => API.post("/auth/register", data);
 export const loginUser = (data) => API.post("/auth/login", data);
 export const googleLoginUser = (tokenId, role) => API.post("/auth/google", { tokenId, role });
-export const logoutUser = () => API.post("/auth/logout");
-export const getMe = () => API.get("/auth/me");
+export const logoutUser = (role) => API.post("/auth/logout", { role });
+export const getMe = (role) => API.get("/auth/me", { params: { role } });
 
 // ── User endpoints ─────────────────────────────────────────
 export const getAllUsers = () => API.get("/users");
@@ -34,9 +34,19 @@ export const updateJob = (id, data) => API.put(`/jobs/${id}`, data);
 export const deleteJob = (id) => API.delete(`/jobs/${id}`);
 
 // ── Application endpoints ──────────────────────────────────
-export const applyToJob = (jobId, data) => API.post(`/applications/apply/${jobId}`, data);
+export const applyToJob = (jobId, formData) => {
+  // If formData is a FormData object (file upload), use multipart
+  if (formData instanceof FormData) {
+    return API.post(`/applications/apply/${jobId}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  }
+  return API.post(`/applications/apply/${jobId}`, formData);
+};
 export const getMyApplications = () => API.get("/applications/my-applications");
 export const getJobApplications = (jobId) => API.get(`/applications/job/${jobId}`);
 export const updateApplicationStatus = (id, status) => API.put(`/applications/${id}/status`, { status });
+export const scheduleInterview = (id, data) => API.put(`/applications/${id}/interview`, data);
+export const scanResumeATS = (applicationId) => API.post(`/applications/${applicationId}/ats-scan`);
 
 export default API;

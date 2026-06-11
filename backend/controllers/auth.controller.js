@@ -5,7 +5,7 @@ const User = require("../models/User.model");
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Helper: generate JWT & set cookie
+// Helper: generate JWT & set role-specific cookie
 const sendTokenResponse = (user, statusCode, res) => {
   const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || "7d",
@@ -18,11 +18,14 @@ const sendTokenResponse = (user, statusCode, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   };
 
+  // Use role-specific cookie name so multiple roles can be logged in simultaneously
+  const cookieName = `token_${user.role}`;
+
   // Remove password from output
   const userObj = user.toObject();
   delete userObj.password;
 
-  res.status(statusCode).cookie("token", token, cookieOptions).json({
+  res.status(statusCode).cookie(cookieName, token, cookieOptions).json({
     success: true,
     token,
     user: userObj,
@@ -87,20 +90,40 @@ exports.login = async (req, res, next) => {
 };
 
 // ── Logout ─────────────────────────────────────────────────
-exports.logout = (_req, res) => {
-  res
-    .status(200)
-    .cookie("token", "", {
-      httpOnly: true,
-      expires: new Date(0),
-    })
-    .json({ success: true, message: "Logged out successfully" });
+exports.logout = (req, res) => {
+  // Clear the role-specific cookie
+  const role = req.query.role || req.body.role || "";
+  const clearCookieOpts = { httpOnly: true, expires: new Date(0) };
+
+  if (role) {
+    // Clear only the specific role cookie
+    res.cookie(`token_${role}`, "", clearCookieOpts);
+  } else {
+    // Fallback: clear all role cookies
+    res.cookie("token_candidate", "", clearCookieOpts);
+    res.cookie("token_recruiter", "", clearCookieOpts);
+    res.cookie("token_admin", "", clearCookieOpts);
+    res.cookie("token", "", clearCookieOpts); // legacy cleanup
+  }
+
+  res.status(200).json({ success: true, message: "Logged out successfully" });
 };
 
 // ── Get Current User ───────────────────────────────────────
 exports.getMe = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id);
+    const requestedRole = req.query.role || req.headers["x-user-role"];
+    let user = req.user;
+
+    if (requestedRole && req._validUsers) {
+      const matchingUser = req._validUsers.find(u => u.role === requestedRole);
+      if (matchingUser) user = matchingUser;
+    }
+
+    if (!user) {
+      return res.status(401).json({ success: false, message: "User not found" });
+    }
+
     res.status(200).json({ success: true, user });
   } catch (error) {
     next(error);

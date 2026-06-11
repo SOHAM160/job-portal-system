@@ -10,6 +10,7 @@ const userRoutes = require("./routes/user.routes");
 const jobRoutes = require("./routes/job.routes");
 const companyRoutes = require("./routes/company.routes");
 const applicationRoutes = require("./routes/application.routes");
+const chatRoutes = require("./routes/chat.routes");
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/companies", companyRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/applications", applicationRoutes);
+app.use("/api/chat", chatRoutes);
 
 app.get("/", (_req, res) => {
   res.json({ message: "Job Portal API is running 🚀" });
@@ -47,12 +49,18 @@ app.use((err, _req, res, _next) => {
 
 // ── Database & Server ──────────────────────────────────────
 const PORT = process.env.PORT || 5000;
+const http = require("http");
+const { initSocket } = require("./socket");
+
+const server = http.createServer(app);
+
+initSocket(server);
 
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("✅ Connected to MongoDB");
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
     });
   })
