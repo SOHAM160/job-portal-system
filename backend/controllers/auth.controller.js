@@ -6,8 +6,9 @@ const User = require("../models/User.model");
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Helper: generate JWT & set role-specific cookie
-const sendTokenResponse = (user, statusCode, res) => {
-  const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+const sendTokenResponse = (user, statusCode, res, forcedRole = null) => {
+  const role = forcedRole || user.role;
+  const token = jwt.sign({ id: user._id, role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || "7d",
   });
 
@@ -19,11 +20,12 @@ const sendTokenResponse = (user, statusCode, res) => {
   };
 
   // Use role-specific cookie name so multiple roles can be logged in simultaneously
-  const cookieName = `token_${user.role}`;
+  const cookieName = `token_${role}`;
 
   // Remove password from output
   const userObj = user.toObject();
   delete userObj.password;
+  userObj.role = role; // Ensure response user object has the requested role
 
   res.status(statusCode).cookie(cookieName, token, cookieOptions).json({
     success: true,
@@ -83,7 +85,7 @@ exports.login = async (req, res, next) => {
         .json({ success: false, message: "Invalid email or password" });
     }
 
-    sendTokenResponse(user, 200, res);
+    sendTokenResponse(user, 200, res, req.body.role);
   } catch (error) {
     next(error);
   }
@@ -117,7 +119,9 @@ exports.getMe = async (req, res, next) => {
 
     if (requestedRole && req._validUsers) {
       const matchingUser = req._validUsers.find(u => u.role === requestedRole);
-      if (matchingUser) user = matchingUser;
+      if (matchingUser) {
+        user = matchingUser;
+      }
     }
 
     if (!user) {
@@ -167,7 +171,7 @@ exports.googleLogin = async (req, res, next) => {
       });
     }
 
-    sendTokenResponse(user, 200, res);
+    sendTokenResponse(user, 200, res, role);
   } catch (error) {
     console.error("Google login error:", error);
     res.status(401).json({ success: false, message: "Google authentication failed" });

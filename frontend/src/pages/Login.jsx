@@ -20,11 +20,18 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const data = await login(form);
+      const data = await login({ ...form, role: selectedRole });
       if (data.success) {
         toast.success(`Welcome back!`);
-        // We redirect to the ACTUAL role of the user returned from DB
-        navigate(`/${data.user.role}/dashboard`);
+        const qParam = searchParams.get("q");
+        const keywordParam = searchParams.get("keyword");
+        let redirectPath = `/${data.user.role}/dashboard`;
+        if (qParam) {
+          redirectPath += `?q=${encodeURIComponent(qParam)}`;
+        } else if (keywordParam) {
+          redirectPath += `?keyword=${encodeURIComponent(keywordParam)}`;
+        }
+        navigate(redirectPath);
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Login failed");
@@ -38,7 +45,15 @@ const Login = () => {
       const data = await loginWithGoogle(credentialResponse.credential, selectedRole);
       if (data.success) {
         toast.success(`Welcome back!`);
-        navigate(`/${data.user.role}/dashboard`);
+        const qParam = searchParams.get("q");
+        const keywordParam = searchParams.get("keyword");
+        let redirectPath = `/${data.user.role}/dashboard`;
+        if (qParam) {
+          redirectPath += `?q=${encodeURIComponent(qParam)}`;
+        } else if (keywordParam) {
+          redirectPath += `?keyword=${encodeURIComponent(keywordParam)}`;
+        }
+        navigate(redirectPath);
       }
     } catch (err) {
       toast.error("Google login failed");
@@ -49,7 +64,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center p-4 bg-surface-100 animate-fade-in text-slate-900">
       <div className="bg-white w-full max-w-md p-10 rounded-[2.5rem] shadow-2xl border border-slate-100">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-black text-slate-800 mb-2 tracking-tighter">Hire <span className="text-primary-600">&</span> Fly</h1>
+          <h1 className="text-4xl font-black text-slate-800 mb-2 tracking-tighter">HireHub</h1>
           <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-[9px] mt-2">Professional Gateway</p>
         </div>
 

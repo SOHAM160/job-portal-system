@@ -41,7 +41,7 @@ const Register = () => {
     <div className="min-h-screen flex items-center justify-center p-4 bg-surface-100 animate-fade-in text-slate-900">
       <div className="bg-white w-full max-w-lg p-10 rounded-[2.5rem] shadow-2xl border border-slate-100">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-black text-slate-800 mb-2 tracking-tighter">Hire <span className="text-primary-600">&</span> Fly</h1>
+          <h1 className="text-4xl font-black text-slate-800 mb-2 tracking-tighter">HireHub</h1>
           <div className="flex items-center justify-center gap-2 text-slate-500 font-bold uppercase tracking-widest text-[10px] bg-slate-50 py-2.5 px-6 rounded-full w-fit mx-auto border border-slate-100 mt-2 shadow-sm">
              {form.role === 'recruiter' ? <Briefcase className="w-4 h-4 text-recruiter-600"/> : <Users className="w-4 h-4 text-primary-600"/>}
              {form.role} Network Invitation

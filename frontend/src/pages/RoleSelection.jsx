@@ -10,7 +10,7 @@ const RoleSelection = () => {
             <div className="bg-primary-600 p-1 rounded">
                 <Briefcase className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-black text-slate-800 tracking-tight">JobPortal</span>
+            <span className="text-xl font-black text-slate-800 tracking-tight">HireHub</span>
          </div>
       </nav>
 
@@ -80,7 +80,7 @@ const RoleSelection = () => {
       </div>
 
       <footer className="p-10 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">
-        © 2024 JobPortal System. Built for Professionals.
+        © 2026 HireHub. Built for Professionals.
       </footer>
     </div>
   );

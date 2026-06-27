@@ -65,8 +65,6 @@ exports.sendMessage = async (req, res, next) => {
       receiver: receiverId,
       text,
     });
-    console.log("SENDING MESSAGE - sender:", req.user._id, "receiver:", receiverId);
-
     // Populate sender and receiver for the real-time emit later
     newMessage = await newMessage.populate("sender", "name profilePhoto");
     newMessage = await newMessage.populate("receiver", "name profilePhoto");

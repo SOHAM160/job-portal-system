@@ -32,6 +32,7 @@ export const getRecruiterJobs = () => API.get("/jobs/recruiter/my-jobs");
 export const getJobById = (id) => API.get(`/jobs/${id}`);
 export const updateJob = (id, data) => API.put(`/jobs/${id}`, data);
 export const deleteJob = (id) => API.delete(`/jobs/${id}`);
+export const getJobRecommendations = () => API.get("/jobs/recommendations/matches");
 
 // ── Application endpoints ──────────────────────────────────
 export const applyToJob = (jobId, formData) => {
@@ -48,5 +49,8 @@ export const getJobApplications = (jobId) => API.get(`/applications/job/${jobId}
 export const updateApplicationStatus = (id, status) => API.put(`/applications/${id}/status`, { status });
 export const scheduleInterview = (id, data) => API.put(`/applications/${id}/interview`, data);
 export const scanResumeATS = (applicationId) => API.post(`/applications/${applicationId}/ats-scan`);
+export const getRecruiterStats = () => API.get("/stats/recruiter");
+export const getCandidateStats = () => API.get("/stats/candidate");
+export const askAssistant = (prompt) => API.post("/assistant/query", { prompt });
 
 export default API;

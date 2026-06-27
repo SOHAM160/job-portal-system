@@ -1,7 +1,9 @@
+const fs = require("fs").promises;
+const fsSync = require("fs");
+const path = require("path");
 const Application = require("../models/Application.model");
 const Job = require("../models/Job.model");
 const sendEmail = require("../utils/email");
-const { cloudinary } = require("../config/cloudinary");
 const pdfParse = require("pdf-parse");
 const https = require("https");
 const http = require("http");
@@ -230,7 +232,7 @@ exports.updateApplicationStatus = async (req, res, next) => {
                   <p style="margin:0;color:#166534;font-weight:600;">What's next?</p>
                   <p style="margin:8px 0 0;color:#15803d;font-size:14px;">The recruiter will soon schedule an interview with you. Keep an eye on your dashboard and email for the meeting link and date.</p>
                 </div>
-                <p style="color:#64748b;font-size:13px;margin-top:24px;">Best of luck!<br/>— The Hire & Fly Team</p>
+                <p style="color:#64748b;font-size:13px;margin-top:24px;">Best of luck!<br/>— The HireHub Team</p>
               </div>
             </div>
           `,
@@ -331,7 +333,7 @@ exports.scheduleInterview = async (req, res, next) => {
                   </table>
                 </div>
                 <a href="${meetingLink}" style="display:inline-block;background:#2563eb;color:white;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:700;font-size:15px;">Join Meeting</a>
-                <p style="color:#64748b;font-size:13px;margin-top:24px;">Good luck!<br/>— The Hire & Fly Team</p>
+                <p style="color:#64748b;font-size:13px;margin-top:24px;">Good luck!<br/>— The HireHub Team</p>
               </div>
             </div>
           `,
@@ -375,8 +377,6 @@ exports.scanResume = async (req, res, next) => {
       const base64str = application.resume.split(",")[1];
       pdfBuffer = Buffer.from(base64str, "base64");
     } else if (application.resume.startsWith("/uploads/resumes/")) {
-      const fs = require("fs").promises;
-      const path = require("path");
       const filePath = path.join(__dirname, "..", application.resume);
       try {
         pdfBuffer = await fs.readFile(filePath);
@@ -439,15 +439,13 @@ exports.viewResume = async (req, res, next) => {
 
     // Handle local file
     if (application.resume.startsWith("/uploads/resumes/")) {
-      const fs = require("fs");
-      const path = require("path");
       const filePath = path.join(__dirname, "..", application.resume);
-      if (!fs.existsSync(filePath)) {
+      if (!fsSync.existsSync(filePath)) {
         return res.status(404).json({ success: false, message: "Resume file not found. Please re-upload." });
       }
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", "inline; filename=resume.pdf");
-      return fs.createReadStream(filePath).pipe(res);
+      return fsSync.createReadStream(filePath).pipe(res);
     }
 
     // Reject old Cloudinary files

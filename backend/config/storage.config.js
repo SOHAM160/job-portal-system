@@ -24,5 +24,4 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB 
 });
 
-// Provide a dummy cloudinary export so existing require statements don't break
-module.exports = { cloudinary: {}, upload };
+module.exports = { upload };

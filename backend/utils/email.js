@@ -10,7 +10,7 @@ const sendEmail = async (options) => {
   });
 
   const mailOptions = {
-    from: `"Hire & Fly" <${process.env.EMAIL_USER}>`,
+    from: `"HireHub" <${process.env.EMAIL_USER}>`,
     to: options.email,
     subject: options.subject,
     html: options.html,

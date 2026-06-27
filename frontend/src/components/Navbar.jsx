@@ -1,4 +1,5 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Briefcase, LogOut, LayoutDashboard, Search, Home as HomeIcon, Bell, MessageSquare, UserCircle } from "lucide-react";
 import toast from "react-hot-toast";
@@ -6,6 +7,13 @@ import toast from "react-hot-toast";
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [searchText, setSearchText] = useState("");
+
+  useEffect(() => {
+    const qVal = searchParams.get("q") || "";
+    setSearchText(qVal);
+  }, [searchParams]);
 
   const handleLogout = async () => {
     try {
@@ -14,6 +22,30 @@ const Navbar = () => {
       navigate("/");
     } catch (error) {
       toast.error("Logout failed");
+    }
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (!user) {
+      if (searchText.trim()) navigate(`/login?q=${encodeURIComponent(searchText.trim())}`);
+      return;
+    }
+    if (searchText.trim()) {
+      // Search with q param
+      navigate(`/${user.role}/dashboard?q=${encodeURIComponent(searchText.trim())}`);
+    } else {
+      // Empty — reset to all jobs (no q param)
+      navigate(`/${user.role}/dashboard`);
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchText(val);
+    // When cleared live, immediately reset to all jobs
+    if (!val && user) {
+      navigate(`/${user.role}/dashboard`);
     }
   };
 
@@ -26,18 +58,20 @@ const Navbar = () => {
             <div className="bg-primary-600 p-1.5 rounded flex items-center justify-center group-hover:bg-primary-700 transition-all">
                 <Briefcase className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-black text-slate-800 tracking-tight hidden sm:block">Hire <span className="text-primary-600">&</span> Fly</span>
+            <span className="text-xl font-black text-slate-800 tracking-tight hidden sm:block">HireHub</span>
           </Link>
           
           {user && (
-            <div className="hidden md:flex items-center bg-primary-50 border border-slate-200 rounded-lg px-3 py-1.5 w-72 group focus-within:w-96 transition-all duration-300">
+            <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center bg-primary-50 border border-slate-200 rounded-lg px-3 py-1.5 w-72 group focus-within:w-96 transition-all duration-300">
               <Search className="w-4 h-4 text-slate-500 mr-2" />
               <input 
                 type="text" 
                 placeholder="Search for jobs, companies..." 
                 className="bg-transparent border-none outline-none text-sm w-full placeholder:text-slate-500"
+                value={searchText}
+                onChange={handleSearchChange}
               />
-            </div>
+            </form>
           )}
         </div>
 

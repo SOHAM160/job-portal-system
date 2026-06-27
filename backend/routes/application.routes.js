@@ -9,7 +9,7 @@ const {
   viewResume,
 } = require("../controllers/application.controller");
 const { authenticate, authorize } = require("../middleware/auth.middleware");
-const { upload } = require("../config/cloudinary");
+const { upload } = require("../config/storage.config");
 
 const router = express.Router();
 

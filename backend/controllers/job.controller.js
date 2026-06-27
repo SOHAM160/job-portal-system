@@ -22,13 +22,15 @@ exports.createJob = async (req, res, next) => {
 // @access  Public
 exports.getAllJobs = async (req, res, next) => {
   try {
-    const { keyword, location, skills, type, salary } = req.query;
+    const { keyword, q, location, skills, type, salary } = req.query;
     let query = {};
 
-    if (keyword) {
+    const searchVal = q || keyword;
+    if (searchVal) {
       query.$or = [
-        { title: { $regex: keyword, $options: "i" } },
-        { description: { $regex: keyword, $options: "i" } },
+        { title: { $regex: searchVal, $options: "i" } },
+        { description: { $regex: searchVal, $options: "i" } },
+        { skills: { $regex: searchVal, $options: "i" } },
       ];
     }
 
@@ -45,15 +47,49 @@ exports.getAllJobs = async (req, res, next) => {
       query.type = type;
     }
 
-    if (salary) {
-      // Extremely basic salary match (usually it's a range, but this is simple equality/regex)
-      query.salary = { $regex: salary, $options: "i" };
-    }
-
-    const jobs = await Job.find(query)
+    let jobs = await Job.find(query)
       .populate("companyId")
       .populate("postedBy", "name email")
       .sort("-createdAt");
+
+    if (salary) {
+      const querySalaryVal = parseFloat(salary.replace(/[$,\s]/g, "").toLowerCase().replace("k", "000"));
+      
+      if (!isNaN(querySalaryVal)) {
+        jobs = jobs.filter(job => {
+          if (!job.salary) return true;
+          
+          const jobSalaryStr = String(job.salary).replace(/[$,\s]/g, "").toLowerCase();
+          const parts = jobSalaryStr.split(/-|to/);
+          
+          const parseVal = (str) => {
+            let multiplier = 1;
+            if (str.includes("k")) {
+              multiplier = 1000;
+              str = str.replace("k", "");
+            }
+            const val = parseFloat(str);
+            return isNaN(val) ? 0 : val * multiplier;
+          };
+
+          let min = 0;
+          let max = Infinity;
+
+          if (parts.length === 2) {
+            min = parseVal(parts[0]);
+            max = parseVal(parts[1]);
+          } else {
+            min = parseVal(jobSalaryStr);
+            max = min || Infinity;
+          }
+
+          return max >= querySalaryVal;
+        });
+      } else {
+        const regex = new RegExp(salary, "i");
+        jobs = jobs.filter(job => regex.test(String(job.salary)));
+      }
+    }
 
     res.status(200).json({ success: true, count: jobs.length, jobs });
   } catch (error) {

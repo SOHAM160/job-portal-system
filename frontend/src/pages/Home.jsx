@@ -33,7 +33,7 @@ const Home = () => {
       {/* Role Selection Section */}
       <section className="max-w-7xl mx-auto px-4 py-20">
         <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl font-bold text-slate-900 tracking-tight">How would you like to use JobPortal?</h2>
+            <h2 className="text-4xl font-bold text-slate-900 tracking-tight">How would you like to use HireHub?</h2>
             <p className="text-slate-500 text-lg">Choose the path that's right for you</p>
         </div>
 
@@ -101,7 +101,7 @@ const Home = () => {
                 <p className="text-sm font-medium uppercase tracking-widest mt-2">Candidates</p>
             </div>
         </div>
-        <div className="mt-12 text-xs">© 2024 JobPortal System. All rights reserved.</div>
+        <div className="mt-12 text-xs">© 2026 HireHub. All rights reserved.</div>
       </footer>
     </div>
   );

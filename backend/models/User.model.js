@@ -46,6 +46,15 @@ const userSchema = new mongoose.Schema(
         ref: "Job",
       },
     ],
+    bio: {
+      type: String,
+      default: "",
+    },
+    skills: [
+      {
+        type: String,
+      },
+    ],
   },
   {
     timestamps: true, // adds createdAt and updatedAt

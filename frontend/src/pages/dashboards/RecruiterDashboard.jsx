@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { Plus, Users, Briefcase, Trash2, Edit3, Loader2, X, Bell, Building, Eye, CheckCircle2, XCircle, Clock, ChevronDown, ChevronUp, UserCircle, FileText, Mail, Calendar, Video, Send, MessageSquare } from "lucide-react";
+import { Plus, Users, Briefcase, Trash2, Edit3, Loader2, X, Bell, Building, Eye, CheckCircle2, XCircle, Clock, ChevronDown, ChevronUp, UserCircle, FileText, Mail, Calendar, Video, Send, MessageSquare, TrendingUp, Bot, Sparkles } from "lucide-react";
+import RecruiterAnalytics from "../../components/RecruiterAnalytics";
+import SmartAssistant from "../../components/SmartAssistant";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { getRecruiterJobs, createJob, deleteJob, getCompanies, updateJob, registerCompany, getJobApplications, updateApplicationStatus, scheduleInterview } from "../../api";
@@ -8,6 +10,7 @@ const RecruiterDashboard = () => {
   const [jobs, setJobs] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("jobs"); // "jobs" | "analytics" | "copilot"
   const [showModal, setShowModal] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
@@ -210,8 +213,8 @@ const RecruiterDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="md:col-span-3 bg-white p-8 rounded-2xl card-shadow flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-black text-slate-900">Manage Your Opportunities</h1>
-            <p className="text-slate-500 font-medium">Post jobs and find the best talent for your companies.</p>
+            <h1 className="text-2xl font-black text-slate-900">Recruiter Dashboard</h1>
+            <p className="text-slate-500 font-medium">Power your hiring with data-driven insights.</p>
           </div>
           <div className="flex gap-3 flex-shrink-0">
               <Link to="/recruiter/companies" className="btn-secondary !rounded-lg"><Building className="w-4 h-4" /> Companies</Link>
@@ -224,9 +227,37 @@ const RecruiterDashboard = () => {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-4 border-b border-slate-200">
+        <button 
+          onClick={() => setActiveTab("jobs")}
+          className={`pb-4 px-2 text-sm font-black uppercase tracking-tighter transition-all relative ${activeTab === "jobs" ? "text-primary-600 border-b-2 border-primary-600" : "text-slate-400 hover:text-slate-600"}`}
+        >
+          <div className="flex items-center gap-2"><Briefcase className="w-4 h-4" /> Job Postings</div>
+        </button>
+        <button 
+          onClick={() => setActiveTab("analytics")}
+          className={`pb-4 px-2 text-sm font-black uppercase tracking-tighter transition-all relative ${activeTab === "analytics" ? "text-primary-600 border-b-2 border-primary-600" : "text-slate-400 hover:text-slate-600"}`}
+        >
+          <div className="flex items-center gap-2"><TrendingUp className="w-4 h-4" /> Analytics</div>
+        </button>
+        <button 
+          onClick={() => setActiveTab("copilot")}
+          className={`pb-4 px-2 text-sm font-black uppercase tracking-tighter transition-all relative ${activeTab === "copilot" ? "text-indigo-600 border-b-2 border-indigo-600" : "text-slate-400 hover:text-indigo-400"}`}
+        >
+          <div className="flex items-center gap-2"><Bot className="w-4 h-4" /> Hiring Copilot <Sparkles className="w-3 h-3" /></div>
+        </button>
+      </div>
+
       {/* Main Content Area */}
       <div className="space-y-4">
-        <h2 className="text-lg font-bold flex items-center gap-2"><Briefcase className="w-5 h-5" /> Your Postings</h2>
+        {activeTab === "copilot" ? (
+          <SmartAssistant />
+        ) : activeTab === "analytics" ? (
+          <RecruiterAnalytics />
+        ) : (
+          <>
+            <h2 className="text-lg font-bold flex items-center gap-2"><Briefcase className="w-5 h-5" /> Your Postings</h2>
         {jobs.length > 0 ? (
           jobs.map((job) => (
             <div key={job._id} className="bg-white rounded-2xl card-shadow overflow-hidden">
@@ -358,6 +389,8 @@ const RecruiterDashboard = () => {
               <p className="font-bold">You haven't posted any jobs yet.</p>
               <p className="text-xs mt-1">Click "Post Job" to get started.</p>
           </div>
+        )}
+          </>
         )}
       </div>
 

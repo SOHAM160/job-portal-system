@@ -64,7 +64,7 @@ const CandidateLanding = () => {
                 <TrendingUp className="w-6 h-6" />
             </div>
             <h3 className="text-xl font-bold mb-2">Career Insights</h3>
-            <p className="text-slate-500 text-sm leading-relaxed mb-4">Get AI-driven insights on matching jobs and market salary trends for your role.</p>
+            <p className="text-slate-500 text-sm leading-relaxed mb-4">Get smart insights on matching jobs and market salary trends for your role.</p>
             <div className="text-slate-900 font-bold flex items-center gap-2 text-sm uppercase">View Dashboard <ChevronRight className="w-4 h-4"/></div>
          </Link>
       </section>

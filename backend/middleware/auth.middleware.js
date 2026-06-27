@@ -37,7 +37,14 @@ const authenticate = async (req, res, next) => {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findById(decoded.id);
-        if (user) validUsers.push(user);
+        if (user) {
+          // IMPORTANT: Simultaneous Login Support
+          // We use the role stored in the JWT for this specific session, 
+          // allowing one user ID to act as different roles in different tabs.
+          const userObj = user.toObject();
+          userObj.role = decoded.role || user.role;
+          validUsers.push(userObj);
+        }
       } catch {
         // skip invalid tokens
       }
