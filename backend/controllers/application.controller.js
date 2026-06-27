@@ -115,14 +115,18 @@ exports.applyToJob = async (req, res, next) => {
 
     let resumeUrl = null;
 
-    // If a file was uploaded via multer (local disk storage used now)
     if (req.file) {
-      resumeUrl = `/uploads/resumes/${req.file.filename}`;
+      if (process.env.NODE_ENV === "production") {
+        // In production, multer-storage-cloudinary sets path to the Cloudinary secure URL
+        resumeUrl = req.file.path;
+      } else {
+        // In development, local disk storage stores the filename
+        resumeUrl = `/uploads/resumes/${req.file.filename}`;
+      }
     }
-    // Fallback: if resume was sent as a base64 string or link in the body
+    // Fallback: resume sent as a URL link or base64 string in the request body
     else if (req.body.resume) {
-      // Just store the base64 string or link directly
-      resumeUrl = req.body.resume; 
+      resumeUrl = req.body.resume;
     }
 
     const application = await Application.create({
@@ -384,7 +388,11 @@ exports.scanResume = async (req, res, next) => {
         return res.status(404).json({ success: false, message: "Resume file not found on server. Please re-upload your resume." });
       }
     } else if (application.resume.includes("res.cloudinary.com")) {
-      return res.status(400).json({ success: false, message: "Older resume detected. Cloudinary is disabled. Please re-upload a new resume." });
+      try {
+        pdfBuffer = await downloadPDF(application.resume);
+      } catch (err) {
+        return res.status(400).json({ success: false, message: "Could not download resume from Cloudinary. Please re-upload." });
+      }
     } else {
       pdfBuffer = await downloadPDF(application.resume);
     }
@@ -448,9 +456,16 @@ exports.viewResume = async (req, res, next) => {
       return fsSync.createReadStream(filePath).pipe(res);
     }
 
-    // Reject old Cloudinary files
+    // Handle Cloudinary-hosted resume URLs (production uploads)
     if (application.resume.includes("res.cloudinary.com")) {
-      return res.status(400).json({ success: false, message: "This older resume format is no longer supported because Cloudinary has been disabled. Please re-upload your resume." });
+      try {
+        const pdfBuffer = await downloadPDF(application.resume);
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", "inline; filename=resume.pdf");
+        return res.send(pdfBuffer);
+      } catch (err) {
+        return res.status(500).json({ success: false, message: "Failed to retrieve resume from Cloudinary." });
+      }
     }
 
     try {

@@ -4,6 +4,9 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+
+  // Dev-only proxy: only active during `npm run dev`, NOT in production build
+  // In production (Vercel), VITE_API_URL is used directly in api/index.js
   server: {
     proxy: {
       '/api': {
@@ -12,4 +15,9 @@ export default defineConfig({
       },
     },
   },
+
+  build: {
+    outDir: 'dist',
+  },
 })
+
