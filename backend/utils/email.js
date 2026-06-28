@@ -12,6 +12,16 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Verify SMTP connection when the server starts
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("❌ SMTP Verify Error:");
+    console.error(error);
+  } else {
+    console.log("✅ SMTP Server is ready to send emails");
+  }
+});
+
 const sendEmail = async (options) => {
   try {
     console.log("====================================");
@@ -36,6 +46,9 @@ const sendEmail = async (options) => {
     console.error("❌ EMAIL ERROR");
     console.error("Message:", err.message);
     console.error("Code:", err.code);
+    console.error("Response:", err.response);
+    console.error("Response Code:", err.responseCode);
+    console.error("Command:", err.command);
     console.error("Stack:", err.stack);
 
     throw err;
