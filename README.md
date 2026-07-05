@@ -25,8 +25,98 @@ An AI-powered MERN Stack Job Portal that connects recruiters and candidates with
 ![Groq](https://img.shields.io/badge/Groq-black?style=for-the-badge)
 
 
+# Live Demo
+
 Frontend:
 https://job-portal-system-omega.vercel.app
 
 Backend:
 https://hirehub-backend-lcxx.onrender.com
+
+# Features
+
+- Candidate Dashboard
+- Recruiter Dashboard
+- AI Resume Analysis
+- ATS Resume Scoring
+- Resume Upload & Viewer
+- Google OAuth Login
+- JWT Authentication
+- Real-time Chat (Socket.IO)
+- Company Management
+- Job Posting
+- Job Applications
+- Candidate Recommendations
+- Brevo Email Notifications
+- Cloudinary Resume Storage
+- Responsive UI
+
+# Tech Stack
+
+### Frontend
+- React
+- Tailwind CSS
+- React Router
+- Axios
+
+### Backend
+- Node.js
+- Express.js
+- MongoDB Atlas
+- JWT
+- Socket.IO
+
+### AI
+- Gemini API
+- Groq API
+
+### Cloud
+- Cloudinary
+- Brevo
+- Render
+- Vercel
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              CLIENTS (Browser)                              │
+│                                                                             │
+│   ┌──────────────────────────────────────────────────────────────────────┐   │
+│   │                    FRONTEND  (Vite + React 19)                      │   │
+│   │                    Deployed on: Vercel                               │   │
+│   │                    Port: 5173 (dev)                                  │   │
+│   │                                                                      │   │
+│   │  ┌──────────┐  ┌───────────┐  ┌──────────┐  ┌───────────────────┐   │   │
+│   │  │ React    │  │ React     │  │ Framer   │  │ Tailwind CSS v4   │   │   │
+│   │  │ Router 7 │  │ Context   │  │ Motion   │  │ + Lucide Icons    │   │   │
+│   │  └──────────┘  └───────────┘  └──────────┘  └───────────────────┘   │   │
+│   │  ┌──────────┐  ┌───────────┐  ┌──────────┐  ┌───────────────────┐   │   │
+│   │  │ Axios    │  │ Recharts  │  │Socket.IO │  │ Google OAuth      │   │   │
+│   │  │ (HTTP)   │  │ (Charts)  │  │ Client   │  │ (@react-oauth)    │   │   │
+│   │  └──────────┘  └───────────┘  └──────────┘  └───────────────────┘   │   │
+│   └──────────────────────────────────────────────────────────────────────┘   │
+│                          │ HTTPS (REST)          │ WSS (WebSocket)           │
+└──────────────────────────┼───────────────────────┼──────────────────────────┘
+                           │                       │
+                           ▼                       ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                       BACKEND  (Node.js + Express)                           │
+│                       Deployed on: Render                                    │
+│                       Port: 5000                                             │
+│                                                                              │
+│  ┌───────────┐  ┌──────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
+│  │ Express   │  │  Socket.IO   │  │  Middleware  │  │ External Services   │  │
+│  │ REST API  │  │  Server      │  │  Pipeline    │  │                     │  │
+│  └─────┬─────┘  └──────┬───────┘  └──────┬──────┘  │ • Google Gemini AI  │  │
+│        │               │                 │          │ • Google OAuth      │  │
+│        ▼               ▼                 ▼          │ • Cloudinary (CDN)  │  │
+│  ┌─────────────────────────────────────────────┐    │ • Brevo (Email)     │  │
+│  │              Mongoose ODM                   │    └─────────────────────┘  │
+│  └─────────────────┬───────────────────────────┘                             │
+│                    │                                                         │
+└────────────────────┼─────────────────────────────────────────────────────────┘
+                     │
+                     ▼
+          ┌─────────────────────┐
+          │   MongoDB Atlas     │
+          │   (Cloud Database)  │
+          └─────────────────────┘
+
